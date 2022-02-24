@@ -23,7 +23,7 @@ public class HashPair<A,B> {
     public int hashCode() {
         int aHash = a.hashCode();
         int bHash = b.hashCode();
-        String hashString = "%d%d";
+        String hashString = "%d-%d";
 
         if (aHash<bHash) {
             hashString = String.format(hashString, aHash,bHash);
