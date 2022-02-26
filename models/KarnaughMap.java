@@ -20,7 +20,7 @@ public class KarnaughMap {
     private TruthTable truthTable;
 
     private String makePair(int t, int s) {
-        return String.format("%d-%d",t,s);
+        return String.format("%d-%d", t, s);
     }
 
     public KarnaughMap(TruthTable truthTable) {
@@ -45,63 +45,62 @@ public class KarnaughMap {
                 for (int sideSet = 0; sideSet < Math.pow(2, sideCount); sideSet++) {
                     int sideCode = Binary.grayCode(sideSet);
 
-                    int value = (topCode << Binary.findBits((int) Math.pow(2,sideCount)-1)) + sideCode;
-                    
+                    int value = (topCode << Binary.findBits((int) Math.pow(2, sideCount) - 1)) + sideCode;
+
                     boolean result = truthTable.result(value, output);
 
                     maps.get(output).put(makePair(topCode, sideCode), result);
 
-                    
-
                 }
             }
 
-            boolean topDone = false;
-
-            for (int s = 0; s < Math.pow(2, sideCount); s++) {
-                int side = Binary.grayCode(s);
-
-                String topRow = " \t";
-                String row = side + "\t";
-
-                
-
-                for (int t = 0; t < Math.pow(2, topCount); t++) {
-                    int top = Binary.grayCode(t);
-                    boolean res = maps.get(output).get(makePair(top, side));
-                    //Print.out(top + "," + side + " = " + res);
-
-                    if (res) {
-                        row += "1  ";
-                    } else {
-                        row += "0  ";
-                    }
-
-                    if (!topDone) {
-                        topRow += top + "  ";
-                    }
-
-
-
-                }
-                if (!topDone) {
-                    Print.out(topRow);
-                    Print.out("------------------------------------");
-                }
-                Print.out(row);
-                topDone = true;
-
-            }
-
-            Print.out("\n");
+            draw(output);
 
         }
 
     }
 
-    public void solve() {
+    public void draw(int output) {
+        boolean topDone = false;
 
-        for (int output = 0; output < maps.size(); output++) {
+        for (int s = 0; s < Math.pow(2, sideCount); s++) {
+            int side = Binary.grayCode(s);
+
+            String topRow = " \t";
+            String row = side + "\t";
+
+            for (int t = 0; t < Math.pow(2, topCount); t++) {
+                int top = Binary.grayCode(t);
+                boolean res = maps.get(output).get(makePair(top, side));
+
+                if (res) {
+                    row += "1  ";
+                } else {
+                    row += "0  ";
+                }
+
+                if (!topDone) {
+                    topRow += top + "  ";
+                }
+
+            }
+            if (!topDone) {
+                Print.out(topRow);
+                Print.out("------------------------------------");
+            }
+            Print.out(row);
+            topDone = true;
+
+        }
+
+        Print.out("\n");
+    }
+
+    public String[] solve() {
+
+        String[] outputs = new String[maps.size()];
+
+        for (int output = maps.size() - 1; output >= 0; output--) {
 
             Set<HashSet<String>> boxes = new HashSet<HashSet<String>>();
 
@@ -129,8 +128,7 @@ public class KarnaughMap {
 
                     for (int i = 0; i < 3; i++) {
                         HashSet<String> box = new HashSet<String>();
-                        
-                        
+
                         if (map.get(makePair(top, grayCellS)) && i == 0) {
                             box.add(String.format("%d-%d", top, side));
                             box.add(String.format("%d-%d", top, grayCellS));
@@ -162,9 +160,10 @@ public class KarnaughMap {
 
             }
 
-            // FIND FORMULAS NOW
+            // FIND FORMULAS NOW IN DISTRIBUTED FORM
 
-            String formula = String.format("%s = ", this.truthTable.getOutputLabels()[this.truthTable.getOutputCount() - output - 1]);
+            String formula = String.format("%s = ",
+                    this.truthTable.getOutputLabels()[this.truthTable.getOutputCount() - output - 1]);
 
             int boxCount = 0;
             for (HashSet<String> box : boxes) {
@@ -220,17 +219,19 @@ public class KarnaughMap {
                 }
 
                 boxCount++;
-                statement = statement.substring(0, statement.length() -1);
+                statement = statement.substring(0, statement.length() - 1);
                 formula += statement;
                 if (boxCount < boxes.size()) {
                     formula += " + ";
                 }
 
             }
-
             Print.out("Formula: " + formula);
+            outputs[output] = formula;
 
         }
+
+        return outputs;
 
     }
 

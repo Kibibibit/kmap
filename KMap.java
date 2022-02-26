@@ -1,3 +1,4 @@
+import models.ExpressionTree;
 import models.KarnaughMap;
 import models.TruthTable;
 import utils.Print;
@@ -21,34 +22,56 @@ public class KMap {
 
         Print.out("Solving for adder");
         KarnaughMap adderKarnaughMap = new KarnaughMap(adderTruthTable);
-        adderKarnaughMap.solve();
+        String[] adderFormulas = adderKarnaughMap.solve();
 
-        Print.out("\n\nSolving for 4 Bit BCD");
 
-        TruthTable bcdTruthTable = new TruthTable(4,5,"A,B,C,D","V,W,X,Y,Z");
+
+        ExpressionTree test1 = new ExpressionTree("C = A");
+        ExpressionTree test2 = new ExpressionTree("C = A");
+
+
+
+        Print.out(test1.equals(test2));
+
+        ExpressionTree test3 = new ExpressionTree("D = !B*C");
+        ExpressionTree test4 = new ExpressionTree("D = B*!C");
+
+        Print.out(test3.equals(test4));
+        
+        for (String adderFormula : adderFormulas) {
+            ExpressionTree adderTree = new ExpressionTree(adderFormula);
+            Print.out(adderTree.toString());
+            adderTree.simplify();
+
+        }
+        
+
+        // Print.out("\n\nSolving for 4 Bit BCD");
+
+        // TruthTable bcdTruthTable = new TruthTable(4,5,"A,B,C,D","V,W,X,Y,Z");
 
         
 
-        bcdTruthTable.setRow("0000","0 0000");
-        bcdTruthTable.setRow("0001","0 0001");
-        bcdTruthTable.setRow("0010","0 0010");
-        bcdTruthTable.setRow("0011","0 0011");
-        bcdTruthTable.setRow(4,4);
-        bcdTruthTable.setRow(5,5);
-        bcdTruthTable.setRow(6,6);
-        bcdTruthTable.setRow(7,7);
-        bcdTruthTable.setRow(8,8);
-        bcdTruthTable.setRow(9,9);
-        bcdTruthTable.setRow(10,16);
-        bcdTruthTable.setRow(11,17);
-        bcdTruthTable.setRow(12,18);
-        bcdTruthTable.setRow(13,19);
-        bcdTruthTable.setRow(14,20);
-        bcdTruthTable.setRow(15,21);
+        // bcdTruthTable.setRow("0000","0 0000");
+        // bcdTruthTable.setRow("0001","0 0001");
+        // bcdTruthTable.setRow("0010","0 0010");
+        // bcdTruthTable.setRow("0011","0 0011");
+        // bcdTruthTable.setRow(4,4);
+        // bcdTruthTable.setRow(5,5);
+        // bcdTruthTable.setRow(6,6);
+        // bcdTruthTable.setRow(7,7);
+        // bcdTruthTable.setRow(8,8);
+        // bcdTruthTable.setRow(9,9);
+        // bcdTruthTable.setRow(10,16);
+        // bcdTruthTable.setRow(11,17);
+        // bcdTruthTable.setRow(12,18);
+        // bcdTruthTable.setRow(13,19);
+        // bcdTruthTable.setRow(14,20);
+        // bcdTruthTable.setRow(15,21);
 
 
-        KarnaughMap bcdKarnaughMap = new KarnaughMap(bcdTruthTable);
-        bcdKarnaughMap.solve();
+        // KarnaughMap bcdKarnaughMap = new KarnaughMap(bcdTruthTable);
+        // bcdKarnaughMap.solve();
 
 
 
