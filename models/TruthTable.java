@@ -11,10 +11,15 @@ public class TruthTable {
 
     private int inputCount;
     private int outputCount;
+    private String[] inputLabels;
+    private String[] outputLabels;
 
-    public TruthTable(int inputCount, int outputCount) {
+    public TruthTable(int inputCount, int outputCount, String inputLabels, String outputLabels) {
         this.inputCount = inputCount;
         this.outputCount = outputCount;
+        this.inputLabels = inputLabels.split(",");
+        this.outputLabels = outputLabels.split(",");
+
         table = new HashMap<Integer, Integer>((int) Math.pow(2,inputCount));
 
         for (int i = 0; i < Math.pow(2,inputCount); i++) {
@@ -52,6 +57,14 @@ public class TruthTable {
 
     public int getOutputCount() {
         return this.outputCount;
+    }
+
+    public String[] getInputLabels() {
+        return this.inputLabels;
+    }
+
+    public String[] getOutputLabels() {
+        return this.outputLabels;
     }
     
 }
