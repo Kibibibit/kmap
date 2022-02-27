@@ -185,7 +185,7 @@ public class ExpressionTree {
         int hashSum = 0;
 
         for (char c : this.value.toCharArray()) {
-            int c_ =  (int) Math.pow((c + i*31),2); // What the hell is this method I feel like John Carmack but dumber
+            int c_ =  c << i; // What the hell is this method I feel like John Carmack but dumber
             hashSum += c_;
             i++;
         }
