@@ -1,9 +1,6 @@
 package models;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import utils.Print;
@@ -43,6 +40,10 @@ public class ExpressionTree {
     public ExpressionTree(String fOf, String expression, ExpressionTree parent) {
 
         this.depth = 0;
+
+        if (expression.contains("=")) {
+            Print.out("ALARM! + " + expression);
+        }
 
         this.fOf = fOf;
         this.parent = parent;
@@ -130,151 +131,143 @@ public class ExpressionTree {
 
     private ExpressionTree simplify(ExpressionTree tree) {
 
-        if (!isLeaf()) {
-            if (this.left.equals(this.right)) {
-                this.left = this.left.clone();
-                this.left.setChildDepths();
-                return simplify(this.left);
-            }
-        }
+        String currentValue = this.value;
 
-        // Print.out(this + " " + this.depth);
+        boolean threeProng = false;
+        boolean doubleParent = false;
+        boolean doubleChild = false;
 
-        Map<ExpressionTree, Integer> counts = this.getCounts();
-
-        int highestCount = 0;
-        ExpressionTree highest = null;
-        int operatorHighestCount = 0;
-        String operatorHighest = null;
-
-        ExpressionTree newParent = null;
-
-        for (Entry<ExpressionTree, Integer> entry : counts.entrySet()) {
-            // Print.out(entry.getKey() + " = " + entry.getValue());
-            if (entry.getValue() > highestCount) {
-                highest = entry.getKey();
-                highestCount = entry.getValue();
-            }
-        }
-
-        if (highestCount > 1) {
-
-            Map<String, Integer> operatorCounts = getOperatorCount(highest);
-            for (Entry<String, Integer> entry : operatorCounts.entrySet()) {
-                // Print.out(entry.getKey() + " = " + entry.getValue());
-                if (entry.getValue() > operatorHighestCount) {
-                    operatorHighest = entry.getKey();
-                    operatorHighestCount = entry.getValue();
-                }
-            }
-
-            if (operatorHighestCount > 1) {
-
-                newParent = new ExpressionTree();
-                newParent.fOf = this.fOf;
-                newParent.value = operatorHighest;
-                newParent.left = highest.clone();
-                newParent.left.parent = newParent;
-
-                shunt(highest, operatorHighest);
-
-                this.parent = newParent;
-                newParent.right = this;
-                newParent.setChildDepths();
-
-                newParent.right = simplify(newParent.right);
-                newParent.right.parent = newParent;
-                newParent.setChildDepths();
-
-                return newParent;
-            }
-
-        }
-
-        // if (operatorHighestCount > 1 && highestCount > 1) {
-        // return newParent.simplify();
-        // }
-        this.setChildDepths();
-        return this;
-
-    }
-
-    private void shunt(ExpressionTree highestTerm, String highestOperator) {
+        ExpressionTree singleTerm = null;
+        ExpressionTree dualTerm = null;
+        boolean left = false;
 
         if (!isLeaf()) {
-            this.left.shunt(highestTerm, highestOperator);
-            this.right.shunt(highestTerm, highestOperator);
-        }
+            // Four prong case eg. (A&B)|(B&C)
+            if (this.left.value.equals(this.right.value) && !this.left.isLeaf() && !this.right.isLeaf()) {
 
-        if (this.value.equals(highestOperator)) {
+                threeProng = this.left.left.equals(this.right.left) || this.left.left.equals(this.right.right)
+                        || this.left.right.equals(this.right.left) || this.left.right.equals(this.right.right);
+                doubleParent = false;
+                doubleChild = false;
 
-            ExpressionTree branch = null;
-
-            if (this.left.equals(highestTerm)) {
-                branch = this.right;
-            } else if (this.right.equals(highestTerm)) {
-                branch = this.left;
             }
 
-            if (branch != null) {
-                this.value = branch.value;
-                this.left = branch.left;
-                this.right = branch.right;
-                if (!branch.isLeaf()) {
-                    this.left.parent = this;
-                    this.right.parent = this;
-                    this.left.setChildDepths();
-                    this.right.setChildDepths();
-                }
-            }
+            // Cases such as (A | (A | B))
+            if ((this.value.equals(this.left.value) || this.value.equals(this.right.value)) &&
+                    (!this.left.isLeaf() || !this.right.isLeaf()) &&
+                    !(this.value.equals(this.left.value) && this.value.equals(this.right.value))) {
 
-        }
-
-    }
-
-    private Map<String, Integer> getOperatorCount(ExpressionTree term) {
-        Map<String, Integer> map = new HashMap<String, Integer>();
-        return getOperatorCount(map, term);
-
-    }
-
-    private Map<String, Integer> getOperatorCount(Map<String, Integer> map, ExpressionTree term) {
-        if (this.equals(term)) {
-            if (this.parent != null) {
-                if (map.containsKey(this.parent.value)) {
-                    map.replace(this.parent.value, map.get(this.parent.value) + 1);
+                left = !this.value.equals(this.left.value);
+                if (left) {
+                    singleTerm = this.left.clone();
+                    dualTerm = this.right.clone();
                 } else {
-                    map.put(this.parent.value, 1);
+                    singleTerm = this.right.clone();
+                    dualTerm = this.left.clone();
+                }
+
+                if (dualTerm.left.equals(singleTerm) || dualTerm.right.equals(singleTerm)) {
+
+                    doubleParent = true;
+                    threeProng = false;
+                    doubleChild = false;
+
+                }
+
+            }
+
+            if (this.left.equals(this.right)) {
+                doubleChild = true;
+                doubleParent = false;
+                threeProng = false;
+            }
+
+            if (threeProng) {
+                boolean match = true;
+
+                ExpressionTree matchTree = null;
+                ExpressionTree newLeft = null;
+                ExpressionTree newRight = null;
+
+                if (this.left.left.equals(this.right.left)) {
+                    newLeft = this.left.right.clone();
+                    newRight = this.right.right.clone();
+                    matchTree = this.left.left.clone();
+                } else if (this.left.left.equals(this.right.right)) {
+                    newLeft = this.left.right.clone();
+                    newRight = this.right.left.clone();
+                    matchTree = this.left.left.clone();
+                } else if (this.left.right.equals(this.right.left)) {
+                    newLeft = this.left.left.clone();
+                    newRight = this.right.right.clone();
+                    matchTree = this.right.left.clone();
+                } else if (this.left.right.equals(this.right.right)) {
+                    matchTree = this.right.right.clone();
+                    newLeft = this.left.left.clone();
+                    newRight = this.right.left.clone();
+                } else {
+                    match = false;
+                }
+
+                if (match) {
+
+                    this.value = this.left.value;
+
+                    this.left = matchTree;
+                    
+
+                    this.right.value = currentValue;
+
+                    this.right.left = newLeft;
+                    this.right.left.parent = this.right;
+                    
+                    this.right.right = newRight;
+                    this.right.right.parent = this.right;
                 }
             }
-        } else {
-            if (!isLeaf()) {
-                map = this.left.getOperatorCount(map, term);
-                map = this.right.getOperatorCount(map, term);
+
+            if (doubleParent) {
+                if (dualTerm.left.equals(singleTerm) || dualTerm.right.equals(singleTerm)) {
+
+                    doubleParent = true;
+
+                    this.left = singleTerm.clone();
+
+                    if (dualTerm.left.equals(singleTerm)) {
+                        this.right = dualTerm.right.clone();
+                    } else {
+                        this.right = dualTerm.left.clone();
+                    }
+
+                }
             }
+
+            if (doubleChild) {
+                this.value = this.left.value;
+                this.right = this.left.right;
+                this.left = this.left.left;
+                
+            }
+
+            if (threeProng || doubleParent || doubleChild) {
+                this.left.parent = this;
+                this.right.parent = this;
+                this.setChildDepths();
+            } else {
+                int oldLeftHash = this.left.hashCode();
+                int oldRightHash = this.right.hashCode();
+                this.left.simplify();
+                this.right.simplify();
+                
+
+                if (this.left.hashCode() != oldLeftHash || this.right.hashCode() != oldRightHash) {
+                    this.simplify();
+                }
+            }
+
         }
 
-        return map;
-    }
-
-    private Map<ExpressionTree, Integer> getCounts() {
-        Map<ExpressionTree, Integer> map = new HashMap<ExpressionTree, Integer>();
-        return this.getCounts(map);
-    }
-
-    private Map<ExpressionTree, Integer> getCounts(Map<ExpressionTree, Integer> map) {
-
-        if (map.containsKey(this)) {
-            map.replace(this, map.get(this) + 1);
-        } else {
-            map.put(this, 1);
-        }
-        if (!isLeaf()) {
-            map = this.left.getCounts(map);
-            map = this.right.getCounts(map);
-        }
-
-        return map;
+        return this;
 
     }
 
@@ -330,6 +323,7 @@ public class ExpressionTree {
             out.left.parent = out;
             out.right = this.right.clone();
             out.right.setParentDepths();
+            out.right.parent = out;
         }
 
         return out;

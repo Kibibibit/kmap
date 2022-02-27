@@ -7,8 +7,7 @@ public class KMap {
 
     public static final void main(String[] args) {
 
-
-        TruthTable adderTruthTable = new TruthTable(3,2,"A,B,C","Q,C'");
+        TruthTable adderTruthTable = new TruthTable(3, 2, "A,B,C", "Q,C'");
 
         adderTruthTable.setRow("000", "00");
         adderTruthTable.setRow("001", "10");
@@ -18,7 +17,6 @@ public class KMap {
         adderTruthTable.setRow("101", "01");
         adderTruthTable.setRow("110", "01");
         adderTruthTable.setRow("111", "11");
-
 
         Print.out("Solving for adder");
         KarnaughMap adderKarnaughMap = new KarnaughMap(adderTruthTable);
@@ -35,65 +33,73 @@ public class KMap {
 
         }
 
+        // Print.out("--- TEST 1 ---");
 
+        // ExpressionTree test = new ExpressionTree("F = (A&B) | (C&B)");
 
-        ExpressionTree test = new ExpressionTree("C = (A&B) | (C&B) | (A&B)");
+        // Print.out(test);
 
+        // test = test.simplify();
 
-        Print.out(test);
+        // Print.out(test);
 
-        test = test.simplify();
+        // Print.out("--- TEST 2 ---");
 
-        Print.out(test);
+        // ExpressionTree test2 = new ExpressionTree("F = (A&C) | (A&C) | (C&B)");
 
-        Print.out("---");
+        // Print.out(test2);
 
-        
+        // test2 = test2.simplify();
 
-        ExpressionTree test2 = new ExpressionTree("C = (A&B) | A");
+        // Print.out(test2);
 
-        Print.out(test2);
+        // Print.out("--- TEST 3 ---");
 
-        test2 = test2.simplify();
+        // ExpressionTree test3 = new ExpressionTree("C' = (C&B) | ((A&B) | (A&C))");
 
-        Print.out(test2);
- 
-        
-        
-        
+        // Print.out(test3);
 
-        // Print.out("\n\nSolving for 4 Bit BCD");
+        // test3 = test3.simplify();
 
-        // TruthTable bcdTruthTable = new TruthTable(4,5,"A,B,C,D","V,W,X,Y,Z");
+        // Print.out(test3);
 
-        
+        Print.out("\n\nSolving for 4 Bit BCD");
 
-        // bcdTruthTable.setRow("0000","0 0000");
-        // bcdTruthTable.setRow("0001","0 0001");
-        // bcdTruthTable.setRow("0010","0 0010");
-        // bcdTruthTable.setRow("0011","0 0011");
-        // bcdTruthTable.setRow(4,4);
-        // bcdTruthTable.setRow(5,5);
-        // bcdTruthTable.setRow(6,6);
-        // bcdTruthTable.setRow(7,7);
-        // bcdTruthTable.setRow(8,8);
-        // bcdTruthTable.setRow(9,9);
-        // bcdTruthTable.setRow(10,16);
-        // bcdTruthTable.setRow(11,17);
-        // bcdTruthTable.setRow(12,18);
-        // bcdTruthTable.setRow(13,19);
-        // bcdTruthTable.setRow(14,20);
-        // bcdTruthTable.setRow(15,21);
+        TruthTable bcdTruthTable = new TruthTable(4,5,"A,B,C,D","V,W,X,Y,Z");
 
+        bcdTruthTable.setRow("0000","0 0000");
+        bcdTruthTable.setRow("0001","0 0001");
+        bcdTruthTable.setRow("0010","0 0010");
+        bcdTruthTable.setRow("0011","0 0011");
+        bcdTruthTable.setRow(4,4);
+        bcdTruthTable.setRow(5,5);
+        bcdTruthTable.setRow(6,6);
+        bcdTruthTable.setRow(7,7);
+        bcdTruthTable.setRow(8,8);
+        bcdTruthTable.setRow(9,9);
+        bcdTruthTable.setRow(10,16);
+        bcdTruthTable.setRow(11,17);
+        bcdTruthTable.setRow(12,18);
+        bcdTruthTable.setRow(13,19);
+        bcdTruthTable.setRow(14,20);
+        bcdTruthTable.setRow(15,21);
 
-        // KarnaughMap bcdKarnaughMap = new KarnaughMap(bcdTruthTable);
-        // bcdKarnaughMap.solve();
+        KarnaughMap bcdKarnaughMap = new KarnaughMap(bcdTruthTable);
 
+        String[] bcdFormulas = bcdKarnaughMap.solve();
+        String[] simpleBcdFormulas = new String[bcdFormulas.length];
 
+        i = 0;
+        for (String bcdFormula : bcdFormulas) {
+            ExpressionTree bcdTree = new ExpressionTree(bcdFormula);
+            Print.out(bcdTree.toString());
+            simpleBcdFormulas[i] = bcdTree.simplify().toString();
+            Print.out(simpleBcdFormulas[i]);
+            i++;
+
+        }
 
         System.exit(0);
-
-
 
     }
 
