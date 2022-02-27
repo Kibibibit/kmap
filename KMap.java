@@ -23,27 +23,43 @@ public class KMap {
         Print.out("Solving for adder");
         KarnaughMap adderKarnaughMap = new KarnaughMap(adderTruthTable);
         String[] adderFormulas = adderKarnaughMap.solve();
+        String[] simpleAdderFormulas = new String[adderFormulas.length];
 
-
-
-        ExpressionTree test1 = new ExpressionTree("C = A");
-        ExpressionTree test2 = new ExpressionTree("C = A");
-
-
-
-        Print.out(test1.equals(test2));
-
-        ExpressionTree test3 = new ExpressionTree("D = !B*C");
-        ExpressionTree test4 = new ExpressionTree("D = B*!C");
-
-        Print.out(test3.equals(test4));
-        
+        int i = 0;
         for (String adderFormula : adderFormulas) {
             ExpressionTree adderTree = new ExpressionTree(adderFormula);
             Print.out(adderTree.toString());
-            adderTree.simplify();
+            simpleAdderFormulas[i] = adderTree.simplify().toString();
+            Print.out(simpleAdderFormulas[i]);
+            i++;
 
         }
+
+
+
+        ExpressionTree test = new ExpressionTree("C = (A&B) | (C&B) | (A&B)");
+
+
+        Print.out(test);
+
+        test = test.simplify();
+
+        Print.out(test);
+
+        Print.out("---");
+
+        
+
+        ExpressionTree test2 = new ExpressionTree("C = (A&B) | A");
+
+        Print.out(test2);
+
+        test2 = test2.simplify();
+
+        Print.out(test2);
+ 
+        
+        
         
 
         // Print.out("\n\nSolving for 4 Bit BCD");

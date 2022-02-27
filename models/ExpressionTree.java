@@ -22,16 +22,17 @@ public class ExpressionTree {
     private ExpressionTree right;
     private ExpressionTree parent;
     private int depth;
+    private int termCount;
 
     public ExpressionTree(String kMapExpression) {
 
-        depth = 1;
+        depth = 0;
         parent = null;
 
         String[] removeEquals = kMapExpression
                 .replaceAll(" ", "")
-                .replaceAll("[\\+]", OR)
-                .replaceAll("[\\*]", AND)
+                .replaceAll("[\\(]", "")
+                .replaceAll("[\\)]", "")
                 .split("=");
         fOf = removeEquals[0];
 
@@ -45,14 +46,17 @@ public class ExpressionTree {
 
         this.fOf = fOf;
         this.parent = parent;
-        this.parent.addDepth();
+        this.setParentDepths();
         build(expression);
 
     }
 
+    private ExpressionTree() {
+    }
+
     public void build(String expression) {
 
-        Print.out(expression);
+        // Print.out(expression);
 
         String[] minterms = expression.split("[\\" + OR + "]");
 
@@ -61,6 +65,7 @@ public class ExpressionTree {
         if (minterms.length == 1) {
             minterms = expression.split("[\\" + AND + "]");
             operation = AND;
+
         }
 
         if (minterms.length == 1) {
@@ -69,6 +74,8 @@ public class ExpressionTree {
             right = null;
             value = expression;
             return;
+        } else {
+            this.termCount = minterms.length;
         }
 
         value = operation;
@@ -95,11 +102,18 @@ public class ExpressionTree {
 
     }
 
-    private void addDepth() {
-        if (parent != null) {
-            this.parent.addDepth();
+    private void setParentDepths() {
+        int i = 0;
+        ExpressionTree tree = this.parent;
+        while (tree != null) {
+            i++;
+            tree.setDepth(i);
+            tree = tree.parent;
         }
-        this.depth++;
+    }
+
+    private void setDepth(int depth) {
+        this.depth = depth;
     }
 
     public int getDepth() {
@@ -116,18 +130,131 @@ public class ExpressionTree {
 
     private ExpressionTree simplify(ExpressionTree tree) {
 
-        if (this.left.equals(this.right)) {
-            return simplify(this.left);
+        if (!isLeaf()) {
+            if (this.left.equals(this.right)) {
+                this.left = this.left.clone();
+                this.left.setChildDepths();
+                return simplify(this.left);
+            }
         }
+
+        // Print.out(this + " " + this.depth);
 
         Map<ExpressionTree, Integer> counts = this.getCounts();
 
+        int highestCount = 0;
+        ExpressionTree highest = null;
+        int operatorHighestCount = 0;
+        String operatorHighest = null;
+
+        ExpressionTree newParent = null;
+
         for (Entry<ExpressionTree, Integer> entry : counts.entrySet()) {
-            Print.out(entry.getKey() + " = " + entry.getValue());
+            // Print.out(entry.getKey() + " = " + entry.getValue());
+            if (entry.getValue() > highestCount) {
+                highest = entry.getKey();
+                highestCount = entry.getValue();
+            }
         }
 
-        return null;
+        if (highestCount > 1) {
 
+            Map<String, Integer> operatorCounts = getOperatorCount(highest);
+            for (Entry<String, Integer> entry : operatorCounts.entrySet()) {
+                // Print.out(entry.getKey() + " = " + entry.getValue());
+                if (entry.getValue() > operatorHighestCount) {
+                    operatorHighest = entry.getKey();
+                    operatorHighestCount = entry.getValue();
+                }
+            }
+
+            if (operatorHighestCount > 1) {
+
+                newParent = new ExpressionTree();
+                newParent.fOf = this.fOf;
+                newParent.value = operatorHighest;
+                newParent.left = highest.clone();
+                newParent.left.parent = newParent;
+
+                shunt(highest, operatorHighest);
+
+                this.parent = newParent;
+                newParent.right = this;
+                newParent.setChildDepths();
+
+                newParent.right = simplify(newParent.right);
+                newParent.right.parent = newParent;
+                newParent.setChildDepths();
+
+                return newParent;
+            }
+
+        }
+
+        // if (operatorHighestCount > 1 && highestCount > 1) {
+        // return newParent.simplify();
+        // }
+        this.setChildDepths();
+        return this;
+
+    }
+
+    private void shunt(ExpressionTree highestTerm, String highestOperator) {
+
+        if (!isLeaf()) {
+            this.left.shunt(highestTerm, highestOperator);
+            this.right.shunt(highestTerm, highestOperator);
+        }
+
+        if (this.value.equals(highestOperator)) {
+
+            ExpressionTree branch = null;
+
+            if (this.left.equals(highestTerm)) {
+                branch = this.right;
+            } else if (this.right.equals(highestTerm)) {
+                branch = this.left;
+            }
+
+            if (branch != null) {
+                this.value = branch.value;
+                this.left = branch.left;
+                this.right = branch.right;
+                if (!branch.isLeaf()) {
+                    this.left.parent = this;
+                    this.right.parent = this;
+                    this.left.setChildDepths();
+                    this.right.setChildDepths();
+                }
+            }
+
+        }
+
+    }
+
+    private Map<String, Integer> getOperatorCount(ExpressionTree term) {
+        Map<String, Integer> map = new HashMap<String, Integer>();
+        return getOperatorCount(map, term);
+
+    }
+
+    private Map<String, Integer> getOperatorCount(Map<String, Integer> map, ExpressionTree term) {
+        if (this.equals(term)) {
+            if (this.parent != null) {
+                if (map.containsKey(this.parent.value)) {
+                    map.replace(this.parent.value, map.get(this.parent.value) + 1);
+                } else {
+                    map.put(this.parent.value, 1);
+                }
+            }
+        } else {
+            if (!isLeaf()) {
+                map = this.left.getOperatorCount(map, term);
+                map = this.right.getOperatorCount(map, term);
+            }
+        }
+
+        return map;
     }
 
     private Map<ExpressionTree, Integer> getCounts() {
@@ -160,7 +287,7 @@ public class ExpressionTree {
             String out = "(%s)";
 
             if (this.parent == null) {
-                out = "%s";
+                out = this.fOf + " = %s";
             }
 
             String valueString = this.value;
@@ -176,16 +303,49 @@ public class ExpressionTree {
 
     }
 
+    private void setChildDepths() {
+
+        if (isLeaf()) {
+            this.setParentDepths();
+        } else {
+            this.left.setChildDepths();
+            this.right.setChildDepths();
+        }
+
+    }
+
+    public ExpressionTree clone() {
+
+        ExpressionTree out = new ExpressionTree();
+
+        out.fOf = this.fOf;
+        out.value = this.value;
+        out.depth = 0;
+        out.termCount = this.termCount;
+        out.parent = null;
+
+        if (!isLeaf()) {
+            out.left = this.left.clone();
+            out.left.setParentDepths();
+            out.left.parent = out;
+            out.right = this.right.clone();
+            out.right.setParentDepths();
+        }
+
+        return out;
+
+    }
+
     @Override
     public int hashCode() {
 
         Set<Object> set = new HashSet<Object>();
-        
+
         int i = 1;
         int hashSum = 0;
 
         for (char c : this.value.toCharArray()) {
-            int c_ =  c << i; // What the hell is this method I feel like John Carmack but dumber
+            int c_ = c << i; // What the hell is this method I feel like John Carmack but dumber
             hashSum += c_;
             i++;
         }
@@ -197,7 +357,7 @@ public class ExpressionTree {
             set.add(this.left.hashCode());
         }
 
-        return set.hashCode();
+        return set.hashCode() << depth;
     }
 
     @Override

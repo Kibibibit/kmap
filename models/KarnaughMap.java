@@ -212,7 +212,7 @@ public class KarnaughMap {
                         if (!value) {
                             statement += "!";
                         }
-                        statement += input + "*";
+                        statement += input + "&";
                     }
 
                     pos++;
@@ -220,9 +220,9 @@ public class KarnaughMap {
 
                 boxCount++;
                 statement = statement.substring(0, statement.length() - 1);
-                formula += statement;
+                formula += "("+statement+")";
                 if (boxCount < boxes.size()) {
-                    formula += " + ";
+                    formula += "|";
                 }
 
             }
